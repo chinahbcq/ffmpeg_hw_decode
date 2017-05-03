@@ -1,6 +1,6 @@
 /**  
- *  Copyright (c) 2017 sensetime.com, Inc. All Rights Reserved
- *  @author Chen Qian (chenqian@sensetime.com)
+ *  Copyright (c) 2017 LGPL, Inc. All Rights Reserved
+ *  @author Chen Qian (chinahbcq@qq.com)
  *  @date 2017.04.18 11:32:44
  *  @brief 解码
  **/

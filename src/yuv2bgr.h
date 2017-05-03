@@ -1,6 +1,6 @@
 /**  
- *  Copyright (c) 2017 sensetime.com, Inc. All Rights Reserved
- *  @author Chen Qian (chenqian@sensetime.com)
+ *  Copyright (c) 2017 LGPL, Inc. All Rights Reserved
+ *  @author Chen Qian (chinahbcq@qq.com)
  *  @date 2017.04.22 14:32:02
  *  @brief gpu颜色空间转换
  */
