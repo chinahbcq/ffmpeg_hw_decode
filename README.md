@@ -1,13 +1,16 @@
+# brief
+this project demonstrate how to decode video stream and convert color space by using GPU.
+
 # build
 make 
-make clean
+
 # run
 ./server
-#dependency
-ffmpeg 3.3
-cuda 8.0
-opencv 2.4.13
 
+#dependency
+* ffmpeg 3.3
+* cuda 8.0
+* opencv 2.4.13
 
 ```
 export CMAKE_PREFIX_PATH=/path/to/opencv/dir
