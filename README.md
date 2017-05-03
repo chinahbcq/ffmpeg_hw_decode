@@ -1,5 +1,5 @@
 # about
-hard decode video stream and color space conversion by ffmpeg and cuda.
+video stream hard decoding and color space conversion by ffmpeg and cuda.
 
 ## brief
 This project demonstrate how to decode video stream and convert color space by using GPU.
