@@ -17,9 +17,10 @@ static int decode_interrupt_cb(void *ctx) {
 static const AVIOInterruptCB int_cb = { decode_interrupt_cb, NULL };
 
 int ffmpeg_decode(AVFormatContext *ic, 
+		const int type, 
 		const int stream_id, 
-		int (*cpu_cb)(cv::Mat&),
-		int (*gpu_cb)(cv::gpu::GpuMat &),
+		int (*cpu_cb)(const int type, cv::Mat&),
+		int (*gpu_cb)(const int type, cv::gpu::GpuMat &),
 		bool use_hw_decode,
 		bool only_key_frame);
 
@@ -34,8 +35,9 @@ int ffmpeg_global_init() {
 }
 
 int ffmpeg_video_decode(const std::string &addr,
-		int (*cpu_cb)(cv::Mat &),
-		int (*gpu_cb)(cv::gpu::GpuMat &),
+		const int type, 
+		int (*cpu_cb)(const int type, cv::Mat&),
+		int (*gpu_cb)(const int type, cv::gpu::GpuMat &),
 		bool use_hw_decode, 
 		bool only_key_frame) {
 	av_log(NULL, AV_LOG_INFO, "stream path:%s, \nuse_hw_decode:%s, \nonly_key_frame:%s,\n", addr.c_str(), 
@@ -100,7 +102,7 @@ int ffmpeg_video_decode(const std::string &addr,
 	}
 	
 	//开始对视频流解码	
-	err = ffmpeg_decode(ic, video_stream_id, cpu_cb, gpu_cb, use_hw_decode, only_key_frame);
+	err = ffmpeg_decode(ic, type, video_stream_id, cpu_cb, gpu_cb, use_hw_decode, only_key_frame);
 	if (err != 0) {
 		av_log(NULL, AV_LOG_FATAL, "ffmpeg decode failed\n");
 		return err;
@@ -114,9 +116,10 @@ int ffmpeg_video_decode(const std::string &addr,
 }
 
 int ffmpeg_decode(AVFormatContext *ic,
+		const int type, 
 		const int stream_id,
-		int (*cpu_cb)(cv::Mat&),
-		int (*gpu_cb)(cv::gpu::GpuMat &),
+		int (*cpu_cb)(const int type, cv::Mat&),
+		int (*gpu_cb)(const int type, cv::gpu::GpuMat &),
 		bool use_hw_decode,
 		bool only_key_frame) {
 	AVCodecParameters *codecpar = NULL;
@@ -206,6 +209,11 @@ int ffmpeg_decode(AVFormatContext *ic,
 			format, 
 			SWS_FAST_BILINEAR,
 			NULL, NULL,NULL);
+
+	//硬解码
+	int is_first_frame = false;
+	int bufsize0, bufsize1, resolution;
+	cv::gpu::GpuMat reqMat, resMat;
 	//开始解码
 	AVPacket pkt;
 	while (av_read_frame(ic, &pkt) >= 0) {
@@ -234,20 +242,22 @@ int ffmpeg_decode(AVFormatContext *ic,
 		//use gpu将frame转化为cv::Mat 格式
 		if (use_hw_decode) {
 			
-			static int bufsize0 = frame->height * frame->linesize[0];
-			static int bufsize1 = frame->height * frame->linesize[1] / 2;
-			static int resolution = frame->height * frame->width;
-			//硬解码		
-			static cv::gpu::GpuMat reqMat(frame->height, frame->width, cv_format);
-			static cv::gpu::GpuMat resMat(frame->height, frame->width, cv_format);
-			
+			if (!is_first_frame) {
+				bufsize0 = frame->height * frame->linesize[0];
+				bufsize1 = frame->height * frame->linesize[1] / 2;
+				resolution = frame->height * frame->width;
+				//硬解码		
+				reqMat.create(frame->height, frame->width, cv_format);
+				resMat.create(frame->height, frame->width, cv_format);
+				resMat.step = frame_bgr->linesize[0];
+				is_first_frame = true;
+			}
 			cudaMemcpy(reqMat.data, frame->data[0], bufsize0, cudaMemcpyHostToDevice);
 			cudaMemcpy(reqMat.data + bufsize0, frame->data[1], bufsize1, cudaMemcpyHostToDevice);
-			
+
 			cvtColor(reqMat.data, resMat.data, resolution, frame->height, frame->width, frame->linesize[0]);
-			resMat.step = frame_bgr->linesize[0];
 			//回调
-			gpu_cb(resMat);
+			gpu_cb(type, resMat);
 		} else { //软解码
 			memset(buffer, 0, buffer_size);
 			sws_scale(sws_ctx, frame->data,
@@ -259,7 +269,7 @@ int ffmpeg_decode(AVFormatContext *ic,
 			 * */	
 			cv::Mat image(frame->height, frame->width, cv_format, frame_bgr->data[0], frame_bgr->linesize[0]);
 			//回调
-			cpu_cb(image);
+			cpu_cb(type, image);
 		}
 
 discard_packet:

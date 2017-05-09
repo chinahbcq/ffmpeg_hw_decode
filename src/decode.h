@@ -48,6 +48,7 @@ int ffmpeg_global_init();
  * 本函数提供视频转码功能
  * 
  * @param addr 视频流的地址
+ * @param flag 视频流的标记,例如 1,2,3路视频的标记可以设置为1,2,3
  * @param cpu_cb cpu 回调函数,原型 int cb_name(cv::Mat &mat),由使用方设计实现; 当解码出一
  *                   帧图像后,首先会转化为cv::Mat格式,然后再调用cb将转化后的mat回调给使用
  *                   者.
@@ -65,8 +66,9 @@ int ffmpeg_global_init();
  * @return 失败返回非0, 成功返回0
  */
 int ffmpeg_video_decode(const std::string &addr, 
-		int (*cpu_cb)(cv::Mat&),
-		int (*gpu_cb)(cv::gpu::GpuMat &),
+		int flag,
+		int (*cpu_cb)(const int type, cv::Mat&),
+		int (*gpu_cb)(const int type, cv::gpu::GpuMat &),
 		bool use_hw_decode = false, 
 		bool only_key_frame = false);
 
