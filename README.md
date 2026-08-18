@@ -1,9 +1,11 @@
+
+
 # about
 video stream hardware decoding and color space conversion by ffmpeg and cuda.
 
 ## brief
 This project demonstrate how to decode video stream and convert color space by using ffmpeg and GPU.
-When hardware decoding video stream, the project use ffmpeg(version: 3.3) and `h264_cuvid` codec(based on NVIDA GPU).
+When hardware decoding video stream, the project use ffmpeg(version: 3.3) and `h264_cuvid` codec(based on NVIDIA GPU).
 When converting NV12 to BGR24 color space, the project use CUDA(version: 8.0) api where readers can find source conversion codes.
 
 As this is a part of `Video Monitor` project focus on decoding RTSP video stream to OpenCV cv::gpu::GpuMat frame, high 
